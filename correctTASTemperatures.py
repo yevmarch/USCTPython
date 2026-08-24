@@ -1,4 +1,4 @@
-from cupy import cp
+import cupy as cp
 
 def correctTASTemperatures(tempArray, refTemps):
     if not isinstance(tempArray, cp.ndarray) or tempArray.ndim != 2:
