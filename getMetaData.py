@@ -18,10 +18,10 @@ def getMetaData(path):
     reflectParams = readConfigFile(params.reflectConfig)
 
     motorPosTotal = reflectParams.dataSelection.motorPos
-    slList = cp.uint16(reflectParams.dataSelection.senderTasList)
-    snList = cp.uint16(reflectParams.dataSelection.senderElementList)
-    rlList = cp.uint16(reflectParams.dataSelection.receiverTasList)
-    rnList = cp.uint16(reflectParams.dataSelection.receiverElementList)
+    slList = cp.array(reflectParams.dataSelection.senderTasList, dtype=cp.uint16)
+    snList = cp.array(reflectParams.dataSelection.senderElementList, dtype=cp.uint16)
+    rlList = cp.array(reflectParams.dataSelection.receiverTasList, dtype=cp.uint16)
+    rnList = cp.array(reflectParams.dataSelection.receiverElementList, dtype=cp.uint16)
 
     params.rootMeasUniqueID = getUniqueID(path, 'info.mat')
 
