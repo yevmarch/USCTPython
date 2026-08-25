@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 import warnings
+import cupy as cp
 from writeReconstructionLog import writeReconstructionLog
 
 def getAvailableMotorPositions(path):
@@ -31,5 +32,5 @@ def getAvailableMotorPositions(path):
     if not pos:
         writeReconstructionLog('No motor positions found for this measurement.', 3)
         warnings.warn(f"NoPositions: No motor positions found under {path}.")
-    
-    return pos
+
+    return cp.array(pos)
