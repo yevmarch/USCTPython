@@ -1,3 +1,4 @@
+import os
 import scipy.io
 import numpy as np
 import cupy as cp
@@ -22,9 +23,11 @@ def _normalize(value):
 
 
 def loadFileToStruct(filePath, *varargin):
-    # input check
-    if not isinstance(filePath, str) or not filePath:
+    # input check -- most callers build filePath as `Path(path) / name`, not a
+    # plain str, so accept any os.PathLike (pathlib.Path included) as well
+    if not isinstance(filePath, (str, os.PathLike)) or not str(filePath):
         raise ValueError("'filePath' must be a non-empty string")
+    filePath = str(filePath)
 
     # load list of variables into structure array
     data = scipy.io.loadmat(filePath)
