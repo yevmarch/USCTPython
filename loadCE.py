@@ -31,11 +31,18 @@ def loadCE(path, name):
 
     if not (isinstance(ce.CE, cp.ndarray) and ce.CE.size > 0 and ce.CE.shape[1] == 1):
         raise ValueError("CE must be a non-empty numeric column vector")
-    
-    if not (isinstance(ce.CE_SF, cp.ndarray) and ce.CE_SF.size > 0 and cp.asarray(ce.CE_SF).size == 1):
+
+    # CE_SF/CEOffset are true scalars in the .mat file, so loadFileToStruct's
+    # normalization returns them as native int/float, not a cp.ndarray
+    def isScalarNumber(x):
+        if isinstance(x, (int, float)):
+            return True
+        return isinstance(x, cp.ndarray) and x.size == 1
+
+    if not isScalarNumber(ce.CE_SF):
         raise ValueError("CE_SF must be a non-empty numeric column scalar")
-    
-    if not (isinstance(ce.CEOffset, cp.ndarray) and ce.CEOffset.size > 0 and cp.asarray(ce.CEOffset).size == 1):
+
+    if not isScalarNumber(ce.CEOffset):
         raise ValueError("CEOffset must be a non-empty numeric column scalar")
     
     return ce

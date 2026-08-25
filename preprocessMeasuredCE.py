@@ -36,9 +36,18 @@ def preprocessMeasuredCE(ce, measInfo, reconstructionFreq, removeDCOffset):
         ceOut = reconstructBandpasssubsampling(ceOut, reconstructionFreq, ce.CE_SF)
 
     
-    # pad to double the length of an A-Scan 
-    indInsert = cp.arange(ceOut.shape[0], measInfo.NumberSamples * 2)
-    ceOut[indInsert, :] = cp.tile(ceOut[ceOut.shape[0], :], (len(indInsert), 1))
+    # pad to double the length of an A-Scan, filling the new rows with a
+    # repeated copy of the current last row.
+    # (measInfo.NumberSamples is a float, so cast the target length to int;
+    # the original `ceOut[indInsert, :] = ...` relied on MATLAB's auto-growing
+    # array assignment -- numpy/cupy don't support that, assigning beyond the
+    # array's current bounds just raises IndexError -- so the padding has to
+    # be built and concatenated instead)
+    targetLength = int(measInfo.NumberSamples * 2)
+    if targetLength > ceOut.shape[0]:
+        numInsert = targetLength - ceOut.shape[0]
+        pad = cp.tile(ceOut[ceOut.shape[0] - 1, :], (numInsert, 1))
+        ceOut = cp.vstack([ceOut, pad])
 
     #offset removal
     if removeDCOffset:

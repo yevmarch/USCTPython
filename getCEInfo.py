@@ -52,15 +52,19 @@ def getCEInfo(pathToData, files, measInfo, paramsPreprocessing):
     try:
         # load ce
         ceLoaded = loadCE(pathToData, files.ce)
-        ceLoaded.CE = preprocessCE(ceLoaded.CE, ceLoaded.CE_SF, paramsPreprocessing.aScanReconstructionFrequency, measInfo.expectedAScanLength)
+        # loadCE reshapes CE into a column vector (N, 1), but preprocessCE
+        # requires a genuine 1D vector (and returns one, via ce.ravel())
+        ceLoaded.CE = preprocessCE(ceLoaded.CE.ravel(), ceLoaded.CE_SF, paramsPreprocessing.aScanReconstructionFrequency, measInfo.expectedAScanLength)
 
         # write to output
         ce.CERef = ceLoaded.CE
 
         # new addition May 2023: compensate individual DACDelay for CE and A-Scans
         if hasattr(measInfo.MetaData.generateCE, 'DACDelay'):
-            for idx in range(ce.CERef.shape[1]):
-                ce.CERef[:, idx] = phaseshift(ce.CERef[:, idx], -(measInfo.MetaData.generateCE.DACDelay - measInfo.MetaData.DACDelay) / measInfo.SampleRate, measInfo.SampleRate)
+            # unlike ce.CE (per-channel measured data), ce.CERef is a single
+            # reference waveform -- apply the phase shift directly, no
+            # per-column loop (there are no columns to loop over)
+            ce.CERef = phaseshift(ce.CERef, -(measInfo.MetaData.generateCE.DACDelay - measInfo.MetaData.DACDelay) / measInfo.SampleRate, measInfo.SampleRate)
 
         ce.CERefOffset = ceLoaded.CEOffset
         ce.CERef_SF = ceLoaded.CE_SF

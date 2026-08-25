@@ -15,7 +15,10 @@ def preprocessCE(ce, ceSampleFrequency, requiredFrequency, expectedLength):
 
     if not isinstance(expectedLength, (int, float, cp.ndarray)) or expectedLength <= 0 or expectedLength != int(expectedLength):
         raise ValueError("'expectedLength' must be a positive integer scalar")
-    
+    # measInfo.expectedAScanLength (the usual caller) is a float; cast once so
+    # every slice bound / array-size use below gets a genuine int
+    expectedLength = int(expectedLength)
+
 
     # adapt frequency of ce
     ce = adaptFrequency(ce, ceSampleFrequency, requiredFrequency)
