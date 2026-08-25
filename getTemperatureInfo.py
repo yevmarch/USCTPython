@@ -16,7 +16,7 @@ def getTemperatureInfo(path, files, numTAS, rootUniqueID, hardwareVersion):
     if not hasattr(files, '__dict__') and not isinstance(files, dict):
         raise ValueError("'files' must be a struct-like object")
 
-    if not isinstance(numTAS, (int, float, cp.integer, cp.floating)) or cp.size(numTAS) != 1:
+    if not isinstance(numTAS, (int, float, cp.integer, cp.floating)):
         raise ValueError("'numTAS' must be a numeric scalar")
 
     if not isinstance(rootUniqueID, str):

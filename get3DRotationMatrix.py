@@ -7,7 +7,9 @@ def get3DRotationMatrix(d=None, dim=None):
         raise ValueError("get3DRotationMatrix:IsEmpty - dimension or angle has no value !!")
     
     # the variables should not be arrays, so an error will be received
-    if cp.size(dim) > 1 or cp.size(d) > 1:
+    # (cp.size() requires an actual cupy.ndarray -- unlike numpy's np.size(),
+    # it doesn't accept plain Python scalars, so only call it on array inputs)
+    if (isinstance(dim, cp.ndarray) and cp.size(dim) > 1) or (isinstance(d, cp.ndarray) and cp.size(d) > 1):
         raise ValueError("get3DRotationMatrix:InputOutOfBounds - Enter a Number!")
     
     # if variables are not given as numbers, we should get an error

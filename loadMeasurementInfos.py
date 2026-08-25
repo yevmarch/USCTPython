@@ -1,10 +1,10 @@
 import os
 import scipy.io
-import numpy as np
 from types import SimpleNamespace
 
 from compareUniqueIDs import compareUniqueIDs
 from lenientMatStruct import load_struct
+from loadFileToStruct import _normalize
 
 def loadMeasurementInfos(path, name=None, loadVariables=None, rootUniqueID=None):
     
@@ -41,14 +41,11 @@ def loadMeasurementInfos(path, name=None, loadVariables=None, rootUniqueID=None)
     measInfo = SimpleNamespace()
     for var in loadVariables:
         if var in data:
-            val = data[var]
-            # scipy returns MATLAB char arrays (even scalar strings) as 1-element
-            # numpy arrays, e.g. array(['USCT3dv3'], dtype='<U8'); unwrap those to
-            # plain str so downstream code can do e.g. measInfo.Hardware.lower()
-            # the way it would on a real MATLAB char array.
-            if isinstance(val, np.ndarray) and val.dtype.kind == 'U':
-                val = str(val.reshape(-1)[0])
-            setattr(measInfo, var, val)
+            # scipy returns every MATLAB variable as a numpy array (even
+            # scalars, as 1x1 arrays); _normalize unwraps scalars/char arrays
+            # to native Python types and converts real arrays to cupy, matching
+            # what downstream code expects (see loadFileToStruct.py).
+            setattr(measInfo, var, _normalize(data[var]))
 
     hardware = getattr(measInfo, 'Hardware', None)
 
