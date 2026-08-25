@@ -65,12 +65,12 @@ def blockingGeometryInfos(geom, rnBlock, rlBlock, snBlock, slBlock, mpBlock):
     # sub2ind equivalent: directly index 4D array with per-dimension index arrays
     # arrayOfDataSize*i gives a row of repeated value i (1-based dimension index)
         dim_idx = (arrayOfDataSize * i).astype(cp.int64) - 1      # convert to 0-based
-        sn_idx  = rnBlock.flatten().astype(cp.int64) - 1          # convert to 0-based
-        sl_idx  = rlBlock.flatten().astype(cp.int64) - 1          # convert to 0-based
+        sn_idx  = snBlock.flatten().astype(cp.int64) - 1          # convert to 0-based
+        sl_idx  = slBlock.flatten().astype(cp.int64) - 1          # convert to 0-based
         mp_idx  = mpBlock.flatten().astype(cp.int64) - 1          # convert to 0-based
 
-        senderPositionBlock[i - 1, :] = geom.receiverPositions[dim_idx, sn_idx, sl_idx, mp_idx]
-        senderNormalBlock[i - 1, :]   = geom.receiverNormals[dim_idx, sn_idx, sl_idx, mp_idx]
+        senderPositionBlock[i - 1, :] = geom.senderPositions[dim_idx, sn_idx, sl_idx, mp_idx]
+        senderNormalBlock[i - 1, :]   = geom.senderNormals[dim_idx, sn_idx, sl_idx, mp_idx]
 
     
     return senderPositionBlock, senderNormalBlock, receiverPositionBlock, receiverNormalBlock

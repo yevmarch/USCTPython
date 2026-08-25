@@ -5,9 +5,11 @@ from bilinearInterpolationGPU import bilinearInterpolationGPU
 def reconstructSAFTimage(ascans, senderPosition, receiverPosition, params):
 
     # grid vectors describing pixel positions in USCT coordinate system
-    xVec = cp.arange(params.startPoint[0], params.endPoint[0] + params.resolution, params.resolution)
-    yVec = cp.arange(params.startPoint[1], params.endPoint[1] + params.resolution, params.resolution)
-    zVec = cp.arange(params.startPoint[2], params.endPoint[2] + params.resolution, params.resolution)
+    # startPoint/endPoint are (1,3) row vectors, so each coordinate needs
+    # both indices -- [0] alone returns the whole [x,y,z] row, not one axis
+    xVec = cp.arange(params.startPoint[0, 0], params.endPoint[0, 0] + params.resolution, params.resolution)
+    yVec = cp.arange(params.startPoint[0, 1], params.endPoint[0, 1] + params.resolution, params.resolution)
+    zVec = cp.arange(params.startPoint[0, 2], params.endPoint[0, 2] + params.resolution, params.resolution)
 
     xGrid, yGrid, zGrid = cp.meshgrid(xVec, yVec, zVec, indexing='ij')
 

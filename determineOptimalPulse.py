@@ -25,7 +25,14 @@ def determineOptimalPulse(imgResolution, optPulseFactor, timeInterval, expectedA
     sincPeak_len = len(sincPeak)
 
     # for fourier-based convolution shift
-    sincPeak[expectedAScanLength] = 0
+    # sincPeak (a short kernel) needs to be zero-padded out to
+    # expectedAScanLength before the FFT below, since sincPeak_ft is later
+    # multiplied elementwise against the full-length A-scan spectrum --
+    # MATLAB's sincPeak(expectedAScanLength) = 0 grows the array
+    # automatically; Python doesn't, so pad explicitly. -1 for 0-based indexing.
+    if len(sincPeak) < expectedAScanLength:
+        sincPeak = cp.concatenate([sincPeak, cp.zeros(expectedAScanLength - len(sincPeak))])
+    sincPeak[expectedAScanLength - 1] = 0
     sincPeak = cp.roll(sincPeak, -int(cp.floor(sincPeak_len / 2)))
     sincPeak_ft = cp.fft.fft(sincPeak)
 
