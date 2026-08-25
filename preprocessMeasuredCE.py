@@ -12,7 +12,14 @@ def preprocessMeasuredCE(ce, measInfo, reconstructionFreq, removeDCOffset):
     if not isinstance(measInfo, SimpleNamespace):
         raise ValueError("'measInfo' must be a struct-like object")
 
-    if not isinstance(reconstructionFreq, (int, float, cp.ndarray)) or cp.size(reconstructionFreq) != 1:
+    # reconstructionFreq is typically a native float (e.g. measInfo.SampleRate
+    # after loadFileToStruct's normalization) -- cp.size() requires an actual
+    # cupy array and rejects plain Python numbers outright, so only call it
+    # once isinstance has confirmed it isn't one
+    _reconstructionFreqOk = isinstance(reconstructionFreq, (int, float)) or (
+        isinstance(reconstructionFreq, cp.ndarray) and cp.size(reconstructionFreq) == 1
+    )
+    if not _reconstructionFreqOk:
         raise ValueError("'reconstructionFreq' must be a numeric scalar")
 
     if removeDCOffset not in (0, 1):

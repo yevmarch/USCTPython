@@ -49,8 +49,11 @@ def transformGeometry(TASElements, motorPos, rlList, rnList, slList, snList, tra
             for rN in rnList:
                 rN = int(rN)
                 rN_idx = rN - 1
-                receiverNormals[:, rN_idx, rL_idx, mp_idx] = rotateAndTranslate(transMatNormals, TASElements[rL_idx].receiverNormals[rN_idx, :])
-                receiverPositions[:, rN_idx, rL_idx, mp_idx] = rotateAndTranslate(transMat, TASElements[rL_idx].receiverPositions[rN_idx, :])
+                # [rN_idx:rN_idx+1, :] (not [rN_idx, :]) keeps the row 2D --
+                # Python indexing with a plain int collapses to 1D, unlike
+                # MATLAB's A(i,:), and rotateAndTranslate requires 2D input
+                receiverNormals[:, rN_idx, rL_idx, mp_idx] = rotateAndTranslate(transMatNormals, TASElements[rL_idx].receiverNormals[rN_idx:rN_idx + 1, :]).ravel()
+                receiverPositions[:, rN_idx, rL_idx, mp_idx] = rotateAndTranslate(transMat, TASElements[rL_idx].receiverPositions[rN_idx:rN_idx + 1, :]).ravel()
         
         # sender position, normal calculation
         for sL in slList:
@@ -59,8 +62,8 @@ def transformGeometry(TASElements, motorPos, rlList, rnList, slList, snList, tra
             for sN in snList:
                 sN = int(sN)
                 sN_idx = sN - 1
-                senderNormals[:, sN_idx, sL_idx, mp_idx] = rotateAndTranslate(transMatNormals, TASElements[sL_idx].emitterNormals[sN_idx, :])
-                senderPositions[:, sN_idx, sL_idx, mp_idx] = rotateAndTranslate(transMat, TASElements[sL_idx].emitterPositions[sN_idx, :])
+                senderNormals[:, sN_idx, sL_idx, mp_idx] = rotateAndTranslate(transMatNormals, TASElements[sL_idx].emitterNormals[sN_idx:sN_idx + 1, :]).ravel()
+                senderPositions[:, sN_idx, sL_idx, mp_idx] = rotateAndTranslate(transMat, TASElements[sL_idx].emitterPositions[sN_idx:sN_idx + 1, :]).ravel()
 
 
     return senderNormals, receiverNormals, senderPositions, receiverPositions

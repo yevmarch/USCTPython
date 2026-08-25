@@ -1,5 +1,6 @@
 from loadFileToStruct import loadFileToStruct
 from compareUniqueIDs import compareUniqueIDs
+from types import SimpleNamespace
 import cupy as cp
 from pathlib import Path
 
@@ -24,10 +25,27 @@ def loadCalibratedSensorTemperature(path, name, rootUniqueID, hardware):
             f"Jumo temperature values in file {fullPath} not in correct format!"
         )
 
-    def hasField(structArr, fieldname):
-        return (hasattr(structArr, 'dtype')
-                and structArr.dtype.names is not None
-                and fieldname in structArr.dtype.names)
+    # loadFileToStruct normalizes a MATLAB struct array into a SimpleNamespace
+    # (single element) or a list of SimpleNamespace (multiple elements) --
+    # these helpers treat a bare SimpleNamespace as a length-1 sequence so
+    # both cases can be handled uniformly below.
+    def hasField(structVal, fieldname):
+        elem = structVal[0] if isinstance(structVal, list) else structVal
+        return isinstance(elem, SimpleNamespace) and hasattr(elem, fieldname)
+
+    def structLen(structVal):
+        return len(structVal) if isinstance(structVal, list) else 1
+
+    def structElem(structVal, idx):
+        return structVal[idx] if isinstance(structVal, list) else structVal
+
+    def hasValue(x):
+        if isinstance(x, (int, float)):
+            return True
+        return isinstance(x, cp.ndarray) and x.size > 0
+
+    def scalarValue(x):
+        return x if isinstance(x, (int, float)) else cp.asarray(x).item()
 
     if hardware.lower() == "usct3dv3":
         # resolve new data format with struct arrays
@@ -35,25 +53,22 @@ def loadCalibratedSensorTemperature(path, name, rootUniqueID, hardware):
         # find out how many temperature values have been captured
         numTemps = 0
         if hasField(temp.JumoTemperature1, 'Temperature'):
-            numTemps = temp.JumoTemperature1.shape[0]
+            numTemps = structLen(temp.JumoTemperature1)
         elif hasField(temp.JumoTemperature2, 'Temperature'):
-            numTemps = temp.JumoTemperature2.shape[0]
+            numTemps = structLen(temp.JumoTemperature2)
         elif hasField(temp.JumoTemperature3, 'Temperature'):
-            numTemps = temp.JumoTemperature3.shape[0]
+            numTemps = structLen(temp.JumoTemperature3)
         elif hasField(temp.JumoTemperature4, 'Temperature'):
-            numTemps = temp.JumoTemperature4.shape[0]
+            numTemps = structLen(temp.JumoTemperature4)
 
         t = cp.full((4, numTemps), cp.nan)
         tStamps = cp.full((4, numTemps), cp.nan)
 
-        def fillArray(out, row, structArr, fieldname):
-            if hasField(structArr, fieldname):
-                for idx in range(structArr.shape[0]):
-                    val = structArr[fieldname][idx]
-                    if cp.size(val) > 0:
-                        out[row, idx] = cp.asarray(val).item()
-                    else:
-                        out[row, idx] = cp.nan
+        def fillArray(out, row, structVal, fieldname):
+            if hasField(structVal, fieldname):
+                for idx in range(structLen(structVal)):
+                    val = getattr(structElem(structVal, idx), fieldname)
+                    out[row, idx] = scalarValue(val) if hasValue(val) else cp.nan
 
         # temperatures
         fillArray(t, 0, temp.JumoTemperature1, 'Temperature')

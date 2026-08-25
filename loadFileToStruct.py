@@ -15,6 +15,21 @@ def _normalize(value):
     # here, once, for every caller of loadFileToStruct.
     if not isinstance(value, np.ndarray):
         return value
+    if value.dtype.names is not None:
+        # MATLAB struct / struct array: scipy represents this as a numpy
+        # structured array with object-dtype fields, which cupy can't hold at
+        # all ("Unsupported dtype ... contains references"). Build
+        # SimpleNamespace(s) instead -- matching the dot-attribute access
+        # this codebase already expects (e.g. convertGeometry.py does
+        # tasElements[i].transducerPositions).
+        elems = []
+        for idx in range(value.size):
+            elem = value.flat[idx]
+            ns = SimpleNamespace()
+            for name in value.dtype.names:
+                setattr(ns, name, _normalize(elem[name]))
+            elems.append(ns)
+        return elems[0] if value.size == 1 else elems
     if value.dtype.kind == 'U':
         return str(value.reshape(-1)[0]) if value.size == 1 else value
     if value.size == 1:

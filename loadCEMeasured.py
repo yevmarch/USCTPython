@@ -31,10 +31,19 @@ def loadCEMeasured(path, name, measInfo):
     if not isinstance(ce.CEMeasured, cp.ndarray) or ce.CEMeasured.size == 0 or ce.CEMeasured.ndim != 2:
         raise ValueError("'ce.CEMeasured' must be a non-empty 2D numeric array")
 
-    if not isinstance(ce.CE_SF, (int, float, cp.ndarray)) or cp.size(ce.CE_SF) != 1:
+    # CE_SF/CEOffset are true scalars in the .mat file, so loadFileToStruct's
+    # normalization returns them as native int/float, not a cp.ndarray --
+    # cp.size() requires an actual cupy array and rejects plain Python
+    # numbers outright, so only call it once isinstance has ruled those out
+    def isScalarNumber(x):
+        if isinstance(x, (int, float)):
+            return True
+        return isinstance(x, cp.ndarray) and cp.size(x) == 1
+
+    if not isScalarNumber(ce.CE_SF):
         raise ValueError("'ce.CE_SF' must be a non-empty numeric scalar")
 
-    if not isinstance(ce.CEOffset, (int, float, cp.ndarray)) or cp.size(ce.CEOffset) != 1:
+    if not isScalarNumber(ce.CEOffset):
         raise ValueError("'ce.CEOffset' must be a non-empty numeric scalar")
     
     return ce

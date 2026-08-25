@@ -25,7 +25,9 @@ def loadSensitivity(file, usctVersion):
     
     sens = getattr(sens, loadVariable)
 
-    if not isinstance(sens, cp.ndarray) or sens.ndim != 1:
+    # angleCorrection is stored as a 2D row vector (e.g. shape (1, 101)), not
+    # 1D -- the code right below this needs two dimensions (sens.shape[0/1])
+    if not isinstance(sens, cp.ndarray) or sens.ndim != 2:
         raise ValueError("'Sensitivity' must be a numeric vector")
     
     if sens.shape[0] > sens.shape[1]:
@@ -48,11 +50,15 @@ def loadSensitivity(file, usctVersion):
 
     # USCT III: extend to 2D by rotational symmetry
     elif usctVersion.lower() == 'usct3dv3':
-        n = len(fullSens1D) // 2
+        # fullSens1D is a (1, szFullSens1D) row vector -- len() on it returns
+        # 1 (the number of rows), not szFullSens1D, so reuse the already
+        # correctly computed length; likewise slice columns (axis=1) below,
+        # not rows
+        n = szFullSens1D // 2
         r = cp.concatenate([cp.arange(n, -1, -1), cp.arange(1, n + 1)])
         ri = cp.sqrt(r[:, None]**2 + r[None, :]**2)
         x_known = r[:n + 1][::-1]              # reverse to ascending order
-        y_known = fullSens1D[:n + 1].ravel()[::-1]  # reverse to match
+        y_known = fullSens1D[:, :n + 1].ravel()[::-1]  # reverse to match
         
         fullSens2D = cp.interp(ri.ravel(), x_known, y_known, left=cp.nan, right=cp.nan).reshape(ri.shape)
         fullSens2D[cp.isnan(fullSens2D)] = 0
