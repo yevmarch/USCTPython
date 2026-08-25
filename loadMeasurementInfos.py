@@ -1,5 +1,6 @@
 import os
 import scipy.io
+import numpy as np
 from types import SimpleNamespace
 
 from compareUniqueIDs import compareUniqueIDs
@@ -40,13 +41,18 @@ def loadMeasurementInfos(path, name=None, loadVariables=None, rootUniqueID=None)
     measInfo = SimpleNamespace()
     for var in loadVariables:
         if var in data:
-            setattr(measInfo, var, data[var])
+            val = data[var]
+            # scipy returns MATLAB char arrays (even scalar strings) as 1-element
+            # numpy arrays, e.g. array(['USCT3dv3'], dtype='<U8'); unwrap those to
+            # plain str so downstream code can do e.g. measInfo.Hardware.lower()
+            # the way it would on a real MATLAB char array.
+            if isinstance(val, np.ndarray) and val.dtype.kind == 'U':
+                val = str(val.reshape(-1)[0])
+            setattr(measInfo, var, val)
 
     hardware = getattr(measInfo, 'Hardware', None)
-    if hasattr(hardware, 'reshape'):
-        hardware = hardware.reshape(-1)[0]
 
-    if hardware is not None and str(hardware).strip().lower() == 'usct3dv3':
+    if hardware is not None and hardware.strip().lower() == 'usct3dv3':
         # MetaData is read via the lenient parser (not scipy.io.loadmat) so it
         # comes back as dotted-attribute SimpleNamespace objects, which is the
         # access style downstream code (estimateOffset, getCEInfo) expects

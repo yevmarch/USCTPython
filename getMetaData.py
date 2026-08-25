@@ -32,7 +32,7 @@ def getMetaData(path):
     transformationMatricesRef = cp.array([[]])
     motorPosAvailableRef = cp.array([[]])
 
-    geom = getGeometryInfo(recoParams.settingInfo, motorPosAvailable, motorPosAvailableRef, rlList, rnList, slList, snList, transformationMatrices, transformationMatricesRef)
+    geom = getGeometryInfo(recoParams.settingInfo, motorPosAvailable, motorPosAvailableRef, rlList, rnList, slList, snList, transformationMatrices, transformationMatricesRef, expInfo.Hardware)
 
     if not reflectParams.dataPreparation.aScanReconstructionFrequency and (expInfo.SampleRate != reflectParams.dataPreparation.aScanReconstructionFrequency):
         writeReconstructionLog('Update expectedAScanSampFreq & AScan length to requested up-sample value', 2)

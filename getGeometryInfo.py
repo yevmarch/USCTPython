@@ -5,7 +5,7 @@ from loadChannelInfos import loadChannelInfos
 from loadSensitivity import loadSensitivity
 from transformGeometry import transformGeometry
 
-def getGeometryInfo(files, motorPos, motorPosRef, rlList, rnList, slList, snList, transformationMatrices, transformationMatricesRef):
+def getGeometryInfo(files, motorPos, motorPosRef, rlList, rnList, slList, snList, transformationMatrices, transformationMatricesRef, usctVersion):
 
     geom = SimpleNamespace()
     geom.info = SimpleNamespace()
@@ -44,7 +44,7 @@ def getGeometryInfo(files, motorPos, motorPosRef, rlList, rnList, slList, snList
     geom.headTable = loadChannelInfos(files.headTable)
 
     # load transducer sensitivity information
-    geom.sensChar = loadSensitivity(files.transducerAngleCharacteristic)
+    geom.sensChar = loadSensitivity(files.transducerAngleCharacteristic, usctVersion)
     
     # transform according to measurement
     geom.senderNormals, geom.receiverNormals, geom.senderPositions, geom.receiverPositions = transformGeometry(geomInitial, motorPos, rlList, rnList, slList, snList, transformationMatrices)
