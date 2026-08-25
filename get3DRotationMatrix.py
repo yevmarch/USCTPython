@@ -21,28 +21,31 @@ def get3DRotationMatrix(d=None, dim=None):
     
     # the rotation matrix method has two entries, angle(d) and dimension(dim = must be between 1-3)
     # that will get an error if they have wrong entries
+    #
+    # built by assigning individual entries into cp.eye(4) rather than
+    # constructing from a nested Python list of cp.cos(d)/cp.sin(d) results:
+    # cupy refuses to build an array from a list containing device arrays
+    # ("Implicit conversion to a NumPy array is not allowed"), unlike numpy.
+    cosD = cp.cos(d)
+    sinD = cp.sin(d)
+    rotationmatrix = cp.eye(4)
+
     if dim == 3:
-        rotationmatrix = cp.array([
-            [cp.cos(d), -cp.sin(d), 0, 0],
-            [cp.sin(d),  cp.cos(d), 0, 0],
-            [0,          0,         1, 0],
-            [0,          0,         0, 1]
-        ])
+        rotationmatrix[0, 0] = cosD
+        rotationmatrix[0, 1] = -sinD
+        rotationmatrix[1, 0] = sinD
+        rotationmatrix[1, 1] = cosD
     elif dim == 2:
-        rotationmatrix = cp.array([
-            [cp.cos(d),  0, cp.sin(d), 0],
-            [0,          1, 0,         0],
-            [-cp.sin(d), 0, cp.cos(d), 0],
-            [0,          0, 0,         1]
-        ])
+        rotationmatrix[0, 0] = cosD
+        rotationmatrix[0, 2] = sinD
+        rotationmatrix[2, 0] = -sinD
+        rotationmatrix[2, 2] = cosD
     elif dim == 1:
-        rotationmatrix = cp.array([
-            [1, 0,          0,           0],
-            [0, cp.cos(d), -cp.sin(d),   0],
-            [0, cp.sin(d),  cp.cos(d),   0],
-            [0, 0,          0,           1]
-        ])
+        rotationmatrix[1, 1] = cosD
+        rotationmatrix[1, 2] = -sinD
+        rotationmatrix[2, 1] = sinD
+        rotationmatrix[2, 2] = cosD
     else:
         raise ValueError(f"get3DRotationMatrix:InputOutOfBounds - Input Must Be (1, 2 or 3): {dim}")
-    
+
     return rotationmatrix
