@@ -18,7 +18,7 @@ def createMatchedFilter(ce, measuredCEused, params, removeOutliersFromCEMeasured
     
     matchedFilter = cp.fft.fft(ce, axis=0)
 
-    if measuredCEused and params.finddefects == 1:
+    if measuredCEused and params.findDefects == 1:
         matchedFilter = reviseMatchedFilter(matchedFilter, removeOutliersFromCEMeasured)
 
     if measuredCEused:
