@@ -1,7 +1,7 @@
 import cupy as cp
 
 def estimateBatchSize(gridShape, dtype=cp.float64, safety_factor=0.3):
-    freeBytes, totalBytes = cp.cuda.device().mem_info
+    freeBytes, totalBytes = cp.cuda.Device().mem_info
     usableBytes = freeBytes * safety_factor
 
     voxelsPerScan = 1
