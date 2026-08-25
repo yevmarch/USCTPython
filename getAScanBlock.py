@@ -53,6 +53,10 @@ def getAScanBlock(path, mp, sl, sn, rl ,rn, measInfo, rootUniqueID):
     for mpE in mp.flatten():
         for slE in sl.flatten():
             for snE in sn.flatten():
+                # cupy iteration yields 0-d arrays rather than native scalars
+                # (unlike numpy); cast to plain int so loadAscanData's
+                # isinstance(..., int) scalar checks don't reject them
+                mpE, slE, snE = int(mpE), int(slE), int(snE)
                 try:
                     # load data
                     dataBlock = loadAscanData(path, slE, snE, mpE, measInfo.Hardware, rootUniqueID)
@@ -79,7 +83,7 @@ def getAScanBlock(path, mp, sl, sn, rl ,rn, measInfo, rootUniqueID):
                 
                 except Exception:
                     writeReconstructionLog(
-                        f'Data not found for TAS {slE:03d} with emitter number {snE:02d} for motor rotation {mp:02d}.', 3
+                        f'Data not found for TAS {slE:03d} with emitter number {snE:02d} for motor rotation {mpE:02d}.', 3
                     )
                     continue  # continue with next set of data
 

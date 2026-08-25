@@ -43,14 +43,18 @@ def getTransformationMatrix(pathToMeasurement, files, motorPosList):
     i = 0  # 0-based counter (was i = 1 in MATLAB)
     
     for mp in motorPosList:
+        # cupy indexing/iteration yields 0-d arrays rather than native scalars
+        # (unlike numpy); cast to a plain int so downstream isinstance(..., int)
+        # scalar checks (get3DRotationMatrix, loadRotationMatrix) don't reject it
+        mp = int(mp)
         mp_idx = mp - 1  # convert to 0-based index for Python arrays
-        
+
         # new: take the movementsListReal for calculation of rotations
         if movementRealAvailable:
             # extract movements & calculate rotation matrix
             if not cp.isnan(movementsListReal[mp_idx, 0]):
                 transformationMatrixList[:, :, mp_idx] = get3DRotationMatrix(
-                    movementsListReal[mp_idx, 0] / 180 * cp.pi, 3
+                    float(movementsListReal[mp_idx, 0]) / 180 * cp.pi, 3
                 )
             else:
                 # fallback if not recorded: identity
