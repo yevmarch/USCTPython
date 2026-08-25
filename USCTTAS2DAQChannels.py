@@ -32,7 +32,7 @@ def USCTYTAS2DAQChannels(headTable, TASnr, Receivernr, expInfo, preComputes):
 
     elif expInfo.Hardware.lower() == "usct3dv3" or expInfo.Hardware.lower() == "usct3dv3_simulated":
         if preComputes.measuredCEused:
-            channel = cp.where(preComputes.measuredCE_TASIndices == TASnr & preComputes.measuredCE_receiverIndices == Receivernr)
+            channel = cp.where((preComputes.measuredCE_TASIndices == TASnr) & (preComputes.measuredCE_receiverIndices == Receivernr))[0]
 
             if channel is None or len(channel) == 0:
                 channel = 1
