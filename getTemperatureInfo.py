@@ -71,21 +71,25 @@ def getTemperatureInfo(path, files, numTAS, rootUniqueID, hardwareVersion):
             # correct temperatures, if requested,
             # otherwise take loaded values
             if files.correctTASTemp:
-                temp1 = cp.squeeze(TASTemp.TASTemperature[1, :, :])
+                # TASTemp.TASTemperature is (2, numTAS) -- row 0 is
+                # temperature, row 1 is the TAS index (confirmed on disk in
+                # both TASTempComp.mat and TASTemp.mat, always 2D, never 3D)
+                temp1 = cp.squeeze(TASTemp.TASTemperature[1, :])
                 if temp1.ndim == 1 or temp1.shape[0] == 1:
                     temp1 = temp1.T
 
-                temp2 = cp.squeeze(TASTemp.TASTemperature[0, :, :]) 
+                temp2 = cp.squeeze(TASTemp.TASTemperature[0, :])
                 if temp2.ndim == 1 or temp2.shape[0] == 1:
                     temp2 = temp2.T
 
-                temp.TASTemperature[1, :, :] = temp1 
+                temp.TASTemperature = cp.zeros_like(TASTemp.TASTemperature)
+                temp.TASTemperature[1, :] = temp1
 
                 if not jumoAllNaN:
                     writeReconstructionLog('Performing temperature correction based on calibrated temperature sensors', 2)
-                    temp.TASTemperature[0, :, :] = correctTASTemperatures(temp2, temp.jumoTemp)
+                    temp.TASTemperature[0, :] = correctTASTemperatures(temp2, temp.jumoTemp)
                 else:
-                    temp.TASTemperature[0, :, :] = temp2
+                    temp.TASTemperature[0, :] = temp2
             else:
                 temp.TASTemperature = TASTemp.TASTemperature
 
@@ -110,7 +114,10 @@ def getTemperatureInfo(path, files, numTAS, rootUniqueID, hardwareVersion):
 
 
     if jumoAllNaN:
-        allTemps = temp.TASTemperature[0, :, :] 
+        # temp.TASTemperature is (2, numTAS) here -- row 0 is temperature,
+        # row 1 is the TAS index (see TASTempComp.mat/TASTemp.mat on disk,
+        # both store it as a plain (2, 128) array, never 3D)
+        allTemps = temp.TASTemperature[0, :]
         temp.expectedTemp = cp.mean(allTemps[~cp.isnan(allTemps)])
         temp.jumoTemp = temp.expectedTemp
 
