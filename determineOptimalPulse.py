@@ -14,7 +14,10 @@ def determineOptimalPulse(imgResolution, optPulseFactor, timeInterval, expectedA
     # convolute the result with optimal pulse of certain width
     desSamplingFreq = 0.5 / timeInterval
     sincFact = optPulseFactor
-    sincLength = cp.round(11 * sincFact / 16)
+    # cp.round() returns a cupy device array (0-d), not a native scalar, even
+    # for scalar input -- cast to int so the cp.arange() bounds below don't
+    # trip cupy's "implicit conversion to NumPy array" guard
+    sincLength = int(cp.round(11 * sincFact / 16))
     sincLength = 3 * sincLength
 
     sincT = timeInterval * cp.arange((-sincLength + timeInterval) / 2, sincLength / 2 + 1)
