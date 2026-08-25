@@ -26,7 +26,9 @@ def getTemperatureInfo(path, files, numTAS, rootUniqueID, hardwareVersion):
         raise ValueError("'hardwareVersion' must be a string")
     
     temp = SimpleNamespace()
-    temp.jumoTemp = loadCalibratedSensorTemperature(path, files.tempCaliSensor, rootUniqueID, hardwareVersion)
+    # loadCalibratedSensorTemperature returns (temperatures, timeStamps); only
+    # the temperature array is used anywhere in this pipeline
+    temp.jumoTemp, _ = loadCalibratedSensorTemperature(path, files.tempCaliSensor, rootUniqueID, hardwareVersion)
     jumoAllNaN = False
     
     if not cp.all(cp.isnan(temp.jumoTemp)):
