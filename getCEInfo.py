@@ -70,8 +70,8 @@ def getCEInfo(pathToData, files, measInfo, paramsPreprocessing):
         ceAvailable = False
         writeReconstructionLog('CE not available', 3)
 
-    ce.measuredCEused = files.useCEMeasured.astype(bool)
-    ce.measuredCEusedForCEcompensation = files.useCEMeasuredForCECompensation.astype(bool)
+    ce.measuredCEused = bool(files.useCEMeasured)
+    ce.measuredCEusedForCEcompensation = bool(files.useCEMeasuredForCECompensation)
     ce.measuredCEavailable = measuredCEAvailable
     ce.ceAvailable = ceAvailable
 
