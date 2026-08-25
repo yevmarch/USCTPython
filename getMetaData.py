@@ -25,7 +25,7 @@ def getMetaData(path):
 
     params.rootMeasUniqueID = getUniqueID(path, 'info.mat')
 
-    maxNumTAS = cp.maximum(rlList, slList)
+    maxNumTAS = cp.maximum(cp.max(rlList), cp.max(slList))
 
     expInfo, temp, ce, transformationMatrices, motorPosAvailable = getMeasurementMetaData(path, recoParams.measurementInfo, motorPosTotal, maxNumTAS, reflectParams.dataPreparation, params.rootMeasUniqueID)
 
