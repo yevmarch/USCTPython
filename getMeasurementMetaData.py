@@ -11,7 +11,7 @@ def getMeasurementMetaData(pathToMeasurement, files, motorPos, numTAS, paramsPre
 
     #trying to find out the data size from measured A-Scans and setting according parameters
     ascanLength = detectAScanLength(pathToMeasurement, info, paramsPreprocessing)
-    if len(ascanLength) == 0:
+    if ascanLength is None:
         ascanLength = paramsPreprocessing.expectedAScanLength
     info.expectedAScanLength = ascanLength
 
