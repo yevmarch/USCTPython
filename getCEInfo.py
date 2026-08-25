@@ -22,7 +22,7 @@ def getCEInfo(pathToData, files, measInfo, paramsPreprocessing):
     if not isinstance(paramsPreprocessing, SimpleNamespace):
         raise ValueError("'paramsPreprocessing' must be a struct-like object")
     
-    ce = SimpleNamespace
+    ce = SimpleNamespace()
 
     measuredCEAvailable = True
 
