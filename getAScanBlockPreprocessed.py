@@ -12,7 +12,16 @@ def getAScanBlockPreprocessed(rootUniqueID, path, mp, sl, sn, rl, rn, geom, meas
     if transReco is not None:
         if not all(v in (0, 1, True, False) for v in cp.atleast_1d(transReco)):
             raise ValueError("'transReco' must be binary (0/1 or True/False)")
-        
+
+    # getAScanBlock requires 2D (1, N) row vectors, but callers commonly pass
+    # a plain int (mp=1) or a 1D array (sl=cp.arange(...)) -- normalize here
+    # rather than loosening getAScanBlock's own input contract
+    mp = cp.atleast_2d(cp.asarray(mp))
+    sl = cp.atleast_2d(cp.asarray(sl))
+    sn = cp.atleast_2d(cp.asarray(sn))
+    rl = cp.atleast_2d(cp.asarray(rl))
+    rn = cp.atleast_2d(cp.asarray(rn))
+
     # get blocked AScan data
     AscanBlock, mpBlock, slBlock, snBlock, rlBlock, rnBlock, gainBlock = getAScanBlock(path, mp, sl ,sn, rl, rn, measInfo, rootUniqueID)
 

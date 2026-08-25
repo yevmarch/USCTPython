@@ -42,7 +42,8 @@ def getAScanBlock(path, mp, sl, sn, rl ,rn, measInfo, rootUniqueID):
     else:
         dataType = cp.float64
 
-    AscanBlock = cp.zeros((measInfo.NumberSamples, numScans), dtype=dataType)
+    # measInfo.NumberSamples is a float; array shapes require ints
+    AscanBlock = cp.zeros((int(measInfo.NumberSamples), numScans), dtype=dataType)
     slBlock = cp.zeros((1, numScans), dtype=cp.int16)
     snBlock = cp.zeros((1, numScans), dtype=cp.int16)
     rlBlock = cp.zeros((1, numScans), dtype=cp.int16)
@@ -62,7 +63,11 @@ def getAScanBlock(path, mp, sl, sn, rl ,rn, measInfo, rootUniqueID):
                     dataBlock = loadAscanData(path, slE, snE, mpE, measInfo.Hardware, rootUniqueID)
                     
                     # check for required receiver data
-                    usedData = checkForCommonListEntries(dataBlock.TASIndices, rl, dataBlock.receiverIndices, rn)
+                    # (flatten: checkForCommonListEntries returns a (N,1)
+                    # column-vector mask, and AscanBlock[:, usedData] below
+                    # mixes a leading ":" slice with a 2D boolean mask, which
+                    # numpy/cupy reject even though usedData alone works fine)
+                    usedData = checkForCommonListEntries(dataBlock.TASIndices, rl, dataBlock.receiverIndices, rn).ravel()
                     
                     # calculations for block writings
                     sizeDataBlock = int(cp.sum(usedData))
@@ -72,11 +77,14 @@ def getAScanBlock(path, mp, sl, sn, rl ,rn, measInfo, rootUniqueID):
                     mpBlock[0, blockIdxs] = mpE
                     slBlock[0, blockIdxs] = slE
                     snBlock[0, blockIdxs] = snE
-                    rlBlock[0, blockIdxs] = dataBlock.TASIndices[usedData]
-                    rnBlock[0, blockIdxs] = dataBlock.receiverIndices[usedData]
+                    # TASIndices/receiverIndices/Amplification are (N,1) column
+                    # vectors; masking with the now-1D usedData preserves that
+                    # trailing size-1 axis, so ravel to match the 1D block rows
+                    rlBlock[0, blockIdxs] = dataBlock.TASIndices[usedData].ravel()
+                    rnBlock[0, blockIdxs] = dataBlock.receiverIndices[usedData].ravel()
                     AscanBlock[:, blockIdxs] = dataBlock.AScans[:, usedData]
-                    
-                    gainBlock[0, blockIdxs] = dataBlock.Amplification[usedData]
+
+                    gainBlock[0, blockIdxs] = dataBlock.Amplification[usedData].ravel()
                     
                     # calculate total number of entries
                     num = num + int(cp.sum(usedData))
@@ -100,4 +108,4 @@ def getAScanBlock(path, mp, sl, sn, rl ,rn, measInfo, rootUniqueID):
         AscanBlock = AscanBlock[:, usedDataIdxs]
 
 
-    return AscanBlock, mpBlock, slBlock, snBlock, snBlock, rlBlock, rnBlock, gainBlock
+    return AscanBlock, mpBlock, slBlock, snBlock, rlBlock, rnBlock, gainBlock

@@ -33,12 +33,15 @@ def preprocessMeasuredCE(ce, measInfo, reconstructionFreq, removeDCOffset):
 
     # decompress if necessary
     if measInfo.Bandpassundersampling == 1:
-    # expand to measInfo.NumberSamples rows, padding with zeros
-        if ceOut.shape[0] < measInfo.NumberSamples:
-            pad = cp.zeros((measInfo.NumberSamples - ceOut.shape[0], ceOut.shape[1]), dtype=ceOut.dtype)
+        # expand to measInfo.NumberSamples rows, padding with zeros
+        # (measInfo.NumberSamples is a float; cast since it's used as an
+        # array-size argument and a slice bound below, both of which require ints)
+        numberSamples = int(measInfo.NumberSamples)
+        if ceOut.shape[0] < numberSamples:
+            pad = cp.zeros((numberSamples - ceOut.shape[0], ceOut.shape[1]), dtype=ceOut.dtype)
             ceOut = cp.vstack([ceOut, pad])
-        elif ceOut.shape[0] > measInfo.NumberSamples:
-            ceOut = ceOut[:measInfo.NumberSamples, :]
+        elif ceOut.shape[0] > numberSamples:
+            ceOut = ceOut[:numberSamples, :]
         
         ceOut = reconstructBandpasssubsampling(ceOut, reconstructionFreq, ce.CE_SF)
 
