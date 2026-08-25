@@ -3,6 +3,7 @@ import scipy.io
 from types import SimpleNamespace
 
 from compareUniqueIDs import compareUniqueIDs
+from lenientMatStruct import load_struct
 
 def loadMeasurementInfos(path, name=None, loadVariables=None, rootUniqueID=None):
     
@@ -30,16 +31,31 @@ def loadMeasurementInfos(path, name=None, loadVariables=None, rootUniqueID=None)
     if not os.path.exists(fullPath):
         raise FileNotFoundError(f"File not found: {fullPath}")
     
-    data = scipy.io.loadmat(fullPath)
+    # loaded without the (large, nested) MetaData variable: some info.mat files
+    # (e.g. written by Octave) contain a MetaData struct that scipy's mio5
+    # reader cannot parse ("buffer is too small for requested array") even
+    # though the file itself is intact -- see lenientMatStruct.py. MetaData is
+    # loaded separately below, only when actually needed.
+    data = scipy.io.loadmat(fullPath, variable_names=loadVariables)
     measInfo = SimpleNamespace()
     for var in loadVariables:
         if var in data:
             setattr(measInfo, var, data[var])
-    
-    if hasattr(measInfo, 'Hardware') and str(measInfo.Hardware).strip().lower() == 'usct3dv3':
-        measurementID = str(data['MetaData']['MeasurementID'][0][0]).strip()
+
+    hardware = getattr(measInfo, 'Hardware', None)
+    if hasattr(hardware, 'reshape'):
+        hardware = hardware.reshape(-1)[0]
+
+    if hardware is not None and str(hardware).strip().lower() == 'usct3dv3':
+        # MetaData is read via the lenient parser (not scipy.io.loadmat) so it
+        # comes back as dotted-attribute SimpleNamespace objects, which is the
+        # access style downstream code (estimateOffset, getCEInfo) expects
+        # (e.g. measInfo.MetaData.generateCE.DACDelay) -- and it sidesteps
+        # scipy's read failure on this struct.
+        metaData = load_struct(fullPath, variable_names=['MetaData'])['MetaData']
+        measurementID = str(metaData.MeasurementID).strip()
         compareUniqueIDs(rootUniqueID, measurementID)
-        measInfo.MetaData = data['MetaData']
+        measInfo.MetaData = metaData
     
     # default AScanDatatype if missing
     if 'AScanDatatype' in loadVariables and not hasattr(measInfo, 'AScanDatatype'):
