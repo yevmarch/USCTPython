@@ -43,7 +43,6 @@ def getAScanBlock(path, mp, sl, sn, rl ,rn, measInfo, rootUniqueID, maxWorkers=1
     else:
         dataType = cp.float64
 
-    # measInfo.NumberSamples is a float; array shapes require ints
     AscanBlock = cp.zeros((int(measInfo.NumberSamples), numScans), dtype=dataType)
     slBlock = cp.zeros((1, numScans), dtype=cp.int16)
     snBlock = cp.zeros((1, numScans), dtype=cp.int16)
